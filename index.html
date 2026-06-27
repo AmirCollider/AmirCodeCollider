@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0C13" />
+<title>Amir Collider — Web & Game Developer</title>
+<meta name="description" content="Amir Collider builds fast, distinctive websites and indie games. Tell me what you need — your request lands in my Telegram in seconds." />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Amir Collider — Web & Game Developer" />
+<meta property="og:description" content="Crafting magical webs & indie games. Start a project in 60 seconds." />
+<meta property="og:image" content="/assets/og.png" />
+
+<link rel="icon" href="/assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ==========================================
+   Design Tokens — "Collision" duotone system
+   AmirCollider — amircodecollider
+   ========================================== */
+:root{
+  --bg:#0A0C13;
+  --bg-2:#0E111B;
+  --surface:#12151F;
+  --surface-2:#171B27;
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.16);
+  --text:#ECEEF5;
+  --text-dim:#9197AD;
+  --text-faint:#5C6178;
+  --ember:#FF6A4D;     /* warm — "matter"      */
+  --plasma:#8A6CFF;    /* cool — "antimatter"  */
+  --spark:#56E1FF;     /* rare highlight       */
+  --grad:linear-gradient(100deg,var(--ember),var(--plasma));
+  --grad-soft:linear-gradient(100deg,rgba(255,106,77,.16),rgba(138,108,255,.16));
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:'Archivo',system-ui,sans-serif;
+  --font-mono:'Space Mono',ui-monospace,monospace;
+  --maxw:1120px;
+  --r:14px;
+}
+
+/* ==========================================
+   Reset & Base
+   ========================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  font-size:16px;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{ /* ambient duotone wash */
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(800px 500px at 78% -8%,rgba(138,108,255,.14),transparent 60%),
+    radial-gradient(700px 480px at 12% 8%,rgba(255,106,77,.10),transparent 60%);
+}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--spark);outline-offset:3px;border-radius:4px}
+::selection{background:rgba(138,108,255,.35);color:#fff}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.02em;color:var(--text-dim);text-transform:none}
+.eyebrow .slash{color:var(--ember)}
+
+/* ==========================================
+   Buttons
+   ========================================== */
+.btn{
+  display:inline-flex;align-items:center;gap:.55rem;
+  font-family:var(--font-mono);font-size:.9rem;font-weight:700;
+  padding:.85rem 1.4rem;border-radius:10px;cursor:pointer;border:1px solid transparent;
+  transition:transform .15s ease,box-shadow .25s ease,background .2s ease,border-color .2s ease;
+  text-decoration:none;white-space:nowrap;
+}
+.btn-primary{background:var(--grad);color:#0A0C13;box-shadow:0 8px 30px -10px rgba(138,108,255,.6)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 38px -10px rgba(255,106,77,.55)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--line-strong)}
+.btn-ghost:hover{border-color:var(--text-dim);background:rgba(255,255,255,.03)}
+.btn .arrow{transition:transform .15s ease}
+.btn:hover .arrow{transform:translateX(3px)}
+
+/* ==========================================
+   Navigation
+   ========================================== */
+.nav{position:sticky;top:0;z-index:40;backdrop-filter:saturate(140%) blur(14px);
+  background:rgba(10,12,19,.6);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-display);font-weight:700;font-size:1.1rem;letter-spacing:-.01em}
+.brand .mark{width:30px;height:30px;border-radius:8px;background:var(--grad);display:grid;place-items:center;overflow:hidden;flex:0 0 auto}
+.brand .mark img{width:100%;height:100%;object-fit:cover}
+.brand .mark span{font-family:var(--font-mono);font-weight:700;color:#0A0C13;font-size:.95rem}
+.nav-links{display:flex;align-items:center;gap:1.8rem;font-family:var(--font-mono);font-size:.85rem;color:var(--text-dim)}
+.nav-links a{transition:color .15s ease}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{display:flex;align-items:center;gap:.9rem}
+@media(max-width:760px){.nav-links{display:none}}
+
+/* ==========================================
+   Hero — collision signature
+   ========================================== */
+.hero{position:relative;padding:clamp(64px,12vw,140px) 0 clamp(60px,9vw,110px);overflow:hidden}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.9;pointer-events:none}
+.hero .wrap{z-index:2}
+.hero h1{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(2.5rem,7vw,5.1rem);line-height:1.02;letter-spacing:-.03em;
+  max-width:16ch;margin:1.4rem 0 0}
+.hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{margin-top:1.5rem;font-size:clamp(1.05rem,2vw,1.3rem);color:var(--text-dim);max-width:54ch}
+.hero .cta-row{margin-top:2.3rem;display:flex;gap:1rem;flex-wrap:wrap}
+.stats{margin-top:3.2rem;display:flex;gap:2.6rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:1.6rem}
+.stat .n{font-family:var(--font-display);font-weight:600;font-size:1.7rem;letter-spacing:-.02em}
+.stat .l{font-family:var(--font-mono);font-size:.72rem;color:var(--text-faint);margin-top:.1rem}
+
+/* ==========================================
+   Section shell
+   ========================================== */
+section{position:relative;z-index:1;padding:clamp(64px,9vw,110px) 0}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;margin-bottom:2.6rem;flex-wrap:wrap}
+.section-head h2{font-family:var(--font-display);font-weight:600;font-size:clamp(1.7rem,4vw,2.6rem);letter-spacing:-.02em;margin-top:.5rem}
+.section-head p{color:var(--text-dim);max-width:42ch}
+
+/* ==========================================
+   Work grid
+   ========================================== */
+.work-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media(max-width:720px){.work-grid{grid-template-columns:1fr}}
+.card{
+  position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:1.7rem;overflow:hidden;transition:border-color .2s ease,transform .2s ease,background .2s ease;
+  display:flex;flex-direction:column;gap:.9rem;min-height:230px}
+.card:hover{border-color:var(--line-strong);transform:translateY(-3px);background:var(--surface-2)}
+.card::after{content:"";position:absolute;inset:0;border-radius:var(--r);padding:1px;
+  background:var(--grad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.card:hover::after{opacity:.55}
+.card .tag{font-family:var(--font-mono);font-size:.7rem;color:var(--text-faint);letter-spacing:.04em;text-transform:uppercase}
+.card h3{font-family:var(--font-display);font-weight:600;font-size:1.35rem;letter-spacing:-.01em}
+.card p{color:var(--text-dim);font-size:.96rem;flex:1}
+.card .meta{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:.4rem}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap}
+.chip{font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);border:1px solid var(--line);padding:.22rem .55rem;border-radius:99px}
+.card .go{font-family:var(--font-mono);font-size:.82rem;color:var(--ember);white-space:nowrap}
+.card.soon .go{color:var(--text-faint)}
+
+/* ==========================================
+   Process
+   ========================================== */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.steps{grid-template-columns:1fr}}
+.step{border-top:2px solid var(--line);padding-top:1.1rem}
+.step .num{font-family:var(--font-mono);font-weight:700;font-size:.8rem;color:var(--ember)}
+.step h4{font-family:var(--font-display);font-weight:600;font-size:1.15rem;margin:.5rem 0 .4rem}
+.step p{color:var(--text-dim);font-size:.92rem}
+
+/* ==========================================
+   Order form
+   ========================================== */
+.order{background:linear-gradient(180deg,var(--bg-2),var(--bg))}
+.form-shell{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}
+@media(max-width:880px){.form-shell{grid-template-columns:1fr;gap:32px}}
+.form-aside h2{font-family:var(--font-display);font-weight:600;font-size:clamp(1.8rem,4vw,2.7rem);letter-spacing:-.02em;margin:.6rem 0 1rem}
+.form-aside p{color:var(--text-dim);max-width:38ch}
+.form-aside .note{margin-top:1.6rem;font-family:var(--font-mono);font-size:.82rem;color:var(--text-faint);
+  border-left:2px solid var(--ember);padding-left:.9rem}
+
+form{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,4vw,34px)}
+.field{margin-bottom:1.15rem}
+.field.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0}
+.field.row > div{margin-bottom:1.15rem}
+label{display:block;font-family:var(--font-mono);font-size:.78rem;color:var(--text-dim);margin-bottom:.45rem}
+label .req{color:var(--ember)}
+input,select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;
+  padding:.8rem .9rem;font-size:.95rem;transition:border-color .15s ease,box-shadow .15s ease}
+input::placeholder,textarea::placeholder{color:var(--text-faint)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plasma);box-shadow:0 0 0 3px rgba(138,108,255,.18)}
+textarea{resize:vertical;min-height:110px}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-dim) 50%),linear-gradient(135deg,var(--text-dim) 50%,transparent 50%);
+  background-position:calc(100% - 20px) center,calc(100% - 15px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.form-submit{margin-top:.4rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.form-submit .btn{width:100%;justify-content:center}
+.form-msg{font-family:var(--font-mono);font-size:.85rem;min-height:1.2em}
+.form-msg.ok{color:#5fd6a0}
+.form-msg.err{color:var(--ember)}
+button[disabled]{opacity:.55;cursor:not-allowed;transform:none!important}
+.spinner{width:15px;height:15px;border:2px solid rgba(10,12,19,.4);border-top-color:#0A0C13;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ==========================================
+   Footer
+   ========================================== */
+footer{border-top:1px solid var(--line);padding:48px 0 60px}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+.foot .links{display:flex;gap:1.4rem;font-family:var(--font-mono);font-size:.85rem;color:var(--text-dim)}
+.foot .links a:hover{color:var(--text)}
+.foot .sig{font-family:var(--font-mono);font-size:.78rem;color:var(--text-faint)}
+
+/* ==========================================
+   Scroll reveal
+   ========================================== */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none;transition:none}
+  .btn,.card{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ==========================================
+     Navigation
+     ========================================== -->
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Amir Collider — home">
+      <span class="mark"><img src="/assets/logo.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'C'}))" /></span>
+      Collider
+    </a>
+    <div class="nav-links">
+      <a href="#work">work</a>
+      <a href="#process">process</a>
+      <a href="#start">start a project</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-primary" href="#start">Start a project</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ==========================================
+     Hero — collision signature
+     ========================================== -->
+<header class="hero" id="top">
+  <canvas id="collider" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <p class="eyebrow"><span class="slash">//</span> amir collider — web &amp; game developer</p>
+    <h1>Magical webs &amp; indie games, <span class="grad">built to order.</span></h1>
+    <p class="lead">I design and ship websites that don't look like anyone else's — and the indie games behind the brand. Tell me what you need below; it hits my Telegram in seconds and I reply to talk it through.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#start">Start a project <span class="arrow">→</span></a>
+      <a class="btn btn-ghost" href="#work">See the work</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">4+</div><div class="l">shipped projects</div></div>
+      <div class="stat"><div class="n">Edge</div><div class="l">cloudflare-fast hosting</div></div>
+      <div class="stat"><div class="n">&lt;1 day</div><div class="l">typical first reply</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ==========================================
+     Work
+     ========================================== -->
+<section id="work">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <p class="eyebrow"><span class="slash">//</span> selected work</p>
+        <h2>Things I've collided into existence.</h2>
+      </div>
+      <p>Games, storefronts, and edge tools — each one shipped end to end, from design to deploy.</p>
+    </div>
+
+    <div class="work-grid">
+      <!-- Neon Katana -->
+      <article class="card reveal">
+        <span class="tag">Indie Game · Android</span>
+        <h3>Neon Katana</h3>
+        <p>A neon-sword action game built and released under AmirCollider Games, with a custom OAuth login flow and live leaderboards.</p>
+        <div class="meta">
+          <div class="chips"><span class="chip">Unity</span><span class="chip">C#</span><span class="chip">Myket</span></div>
+          <a class="go" href="https://myket.ir/app/com.AmirColliderGames.NeonKatana" target="_blank" rel="noopener">View on Myket ↗</a>
+        </div>
+      </article>
+
+      <!-- mcjn_jazzy -->
+      <article class="card reveal">
+        <span class="tag">Client Site · Commission Storefront</span>
+        <h3>mcjn_jazzy commissions</h3>
+        <p>A cozy commission storefront for an illustrator: live price calculator, file uploads, and an order form that routes every request straight to her inbox.</p>
+        <div class="meta">
+          <div class="chips"><span class="chip">Cloudflare Pages</span><span class="chip">Forms</span></div>
+          <a class="go" href="https://mcjnjazzy.pages.dev/" target="_blank" rel="noopener">Visit site ↗</a>
+        </div>
+      </article>
+
+      <!-- The Frayed Red String -->
+      <article class="card soon reveal">
+        <span class="tag">Indie Game · In Development</span>
+        <h3>The Frayed Red String</h3>
+        <p>A dark psychological meta-horror game with file-system-aware glitches and reality-bending transitions. Currently in active development.</p>
+        <div class="meta">
+          <div class="chips"><span class="chip">Unity</span><span class="chip">C#</span><span class="chip">Horror</span></div>
+          <span class="go">Coming soon</span>
+        </div>
+      </article>
+
+      <!-- OAuth Proxy -->
+      <article class="card reveal">
+        <span class="tag">Infrastructure · Edge</span>
+        <h3>Collider OAuth Proxy</h3>
+        <p>An authentication gateway running on Cloudflare Workers — 26 API services, multilingual, powering login across the Collider games.</p>
+        <div class="meta">
+          <div class="chips"><span class="chip">Workers</span><span class="chip">OAuth</span><span class="chip">i18n</span></div>
+          <a class="go" href="https://amircollider.n95pluss.workers.dev/" target="_blank" rel="noopener">View live ↗</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     Process
+     ========================================== -->
+<section id="process">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <p class="eyebrow"><span class="slash">//</span> how it works</p>
+        <h2>From idea to live site, four steps.</h2>
+      </div>
+      <p>No agency runaround. You talk directly to the person building it — me.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><div class="num">01</div><h4>Send the brief</h4><p>Fill the form below. It pings my Telegram the moment you hit send.</p></div>
+      <div class="step reveal"><div class="num">02</div><h4>We scope it</h4><p>I reply to lock the look, features, timeline, and a fair fixed price.</p></div>
+      <div class="step reveal"><div class="num">03</div><h4>I build</h4><p>Design and code, with previews you can react to as it takes shape.</p></div>
+      <div class="step reveal"><div class="num">04</div><h4>Launch</h4><p>Deployed to fast edge hosting on your domain — yours to keep.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     Order form  →  Telegram
+     ========================================== -->
+<section id="start" class="order">
+  <div class="wrap">
+    <div class="form-shell">
+      <div class="form-aside reveal">
+        <p class="eyebrow"><span class="slash">//</span> start a project</p>
+        <h2>Tell me what to build.</h2>
+        <p>The more detail you give, the sharper my first reply. There's no commitment in sending this — it just opens the conversation.</p>
+        <p class="note">Your request is sent to me privately over Telegram. I'll reach out using the contact you choose.</p>
+      </div>
+
+      <!-- Real form — posts JSON to the Pages Function at /api/order -->
+      <form id="order-form" novalidate>
+        <!-- honeypot: bots fill this, humans never see it -->
+        <div class="hp" aria-hidden="true">
+          <label for="company">Company</label>
+          <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="name">Your name <span class="req">*</span></label>
+          <input id="name" name="name" type="text" placeholder="What should I call you?" required />
+        </div>
+
+        <div class="field row">
+          <div>
+            <label for="contact_method">Best way to reach you <span class="req">*</span></label>
+            <select id="contact_method" name="contact_method" required>
+              <option value="" disabled selected>Pick one…</option>
+              <option value="Telegram">Telegram</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Email">Email</option>
+              <option value="Discord">Discord</option>
+            </select>
+          </div>
+          <div>
+            <label for="contact_handle">Your handle / address <span class="req">*</span></label>
+            <input id="contact_handle" name="contact_handle" type="text" placeholder="@username or email" required />
+          </div>
+        </div>
+
+        <div class="field row">
+          <div>
+            <label for="project_type">What do you need? <span class="req">*</span></label>
+            <select id="project_type" name="project_type" required>
+              <option value="" disabled selected>Pick one…</option>
+              <option value="Landing page">Landing page</option>
+              <option value="Portfolio">Portfolio</option>
+              <option value="Online store">Online store</option>
+              <option value="Web app">Web app</option>
+              <option value="Game / game site">Game / game site</option>
+              <option value="Something else">Something else</option>
+            </select>
+          </div>
+          <div>
+            <label for="budget">Budget range</label>
+            <select id="budget" name="budget">
+              <option value="Not sure yet" selected>Not sure yet</option>
+              <option value="Under $100">Under $100</option>
+              <option value="$100 – $300">$100 – $300</option>
+              <option value="$300 – $700">$300 – $700</option>
+              <option value="$700+">$700+</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="timeline">When do you need it?</label>
+          <input id="timeline" name="timeline" type="text" placeholder="e.g. in 2 weeks, no rush, ASAP…" />
+        </div>
+
+        <div class="field">
+          <label for="details">Describe the project <span class="req">*</span></label>
+          <textarea id="details" name="details" placeholder="What's it for, who's it for, any sites you love, must-have features…" required></textarea>
+        </div>
+
+        <div class="form-submit">
+          <button type="submit" class="btn btn-primary" id="submit-btn">
+            <span class="spinner" id="spinner"></span>
+            <span id="submit-label">Send my request</span>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+        <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     Footer
+     ========================================== -->
+<footer>
+  <div class="wrap foot">
+    <div class="sig">© <span id="year"></span> Amir Collider · Crafting magical webs &amp; indie games 🪐</div>
+    <div class="links">
+      <a href="https://github.com/AmirCollider" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.instagram.com/amir.collider/" target="_blank" rel="noopener">Instagram</a>
+      <a href="#start">Start a project</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ==========================================
+   Year
+   ========================================== */
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ==========================================
+   Scroll reveal
+   ========================================== */
+(function(){
+  var els = document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+  },{threshold:.14});
+  els.forEach(function(e){io.observe(e)});
+})();
+
+/* ==========================================
+   Hero collision — two counter-rotating particles
+   that periodically collide and emit sparks
+   ========================================== */
+(function(){
+  var canvas = document.getElementById('collider');
+  if(!canvas) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ctx = canvas.getContext('2d');
+  var w=0,h=0,dpr=1,cx=0,cy=0, t=0, sparks=[], cooldown=0;
+
+  function resize(){
+    dpr = Math.min(2, window.devicePixelRatio||1);
+    w = canvas.clientWidth; h = canvas.clientHeight;
+    canvas.width = w*dpr; canvas.height = h*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cx = w*0.62; cy = h*0.46;            /* offset right so it sits beside the headline */
+    if(w < 760){ cx = w*0.5; cy = h*0.30; }
+  }
+
+  function glow(x,y,r,color,a){
+    var g = ctx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0, color + a + ')');
+    g.addColorStop(1, color + '0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+
+  function frame(){
+    t += 0.016;
+    ctx.clearRect(0,0,w,h);
+    var R = Math.min(w,h) * (w<760 ? 0.26 : 0.2);
+
+    var aAng = t*0.55, bAng = -t*0.6 + Math.PI*0.5;
+    var ax = cx + Math.cos(aAng)*R,      ay = cy + Math.sin(aAng)*R*0.6;
+    var bx = cx + Math.cos(bAng)*R*0.92, by = cy + Math.sin(bAng)*R*0.6;
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    /* faint orbit trace */
+    ctx.strokeStyle = 'rgba(255,255,255,.04)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(cx,cy,R,R*0.6,0,0,Math.PI*2); ctx.stroke();
+
+    /* the two particles */
+    glow(ax,ay,46,'rgba(255,106,77,', '.55');
+    glow(bx,by,46,'rgba(138,108,255,','.55');
+    glow(ax,ay,7,'rgba(255,180,160,','.9');
+    glow(bx,by,7,'rgba(190,175,255,','.9');
+
+    /* collision detection */
+    var dx=ax-bx, dy=ay-by, d=Math.sqrt(dx*dx+dy*dy);
+    if(d < 26 && cooldown<=0){
+      cooldown = 40;
+      var mx=(ax+bx)/2, my=(ay+by)/2;
+      for(var i=0;i<22;i++){
+        var ang=Math.random()*Math.PI*2, sp=1.4+Math.random()*3.2;
+        sparks.push({x:mx,y:my,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,life:1,
+          c: Math.random()<0.5 ? '255,106,77' : '138,108,255'});
+      }
+      glow(mx,my,70,'rgba(86,225,255,','.5');
+    }
+    if(cooldown>0) cooldown--;
+
+    /* update sparks */
+    for(var j=sparks.length-1;j>=0;j--){
+      var s=sparks[j];
+      s.x+=s.vx; s.y+=s.vy; s.vx*=0.96; s.vy*=0.96; s.life-=0.022;
+      if(s.life<=0){ sparks.splice(j,1); continue; }
+      ctx.fillStyle='rgba('+s.c+','+s.life+')';
+      ctx.beginPath(); ctx.arc(s.x,s.y,2.1,0,Math.PI*2); ctx.fill();
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
+    if(running) requestAnimationFrame(frame);
+  }
+
+  var running = false;
+  function start(){ if(!running){ running=true; requestAnimationFrame(frame); } }
+  function stop(){ running=false; }
+
+  function staticFrame(){
+    /* reduced-motion: one calm composed frame */
+    ctx.clearRect(0,0,w,h);
+    ctx.globalCompositeOperation='lighter';
+    var R=Math.min(w,h)*0.2;
+    glow(cx-R*0.7,cy,46,'rgba(255,106,77,','.5');
+    glow(cx+R*0.7,cy,46,'rgba(138,108,255,','.5');
+    glow(cx,cy,60,'rgba(86,225,255,','.25');
+    ctx.globalCompositeOperation='source-over';
+  }
+
+  window.addEventListener('resize', function(){ resize(); if(reduce) staticFrame(); });
+  resize();
+  if(reduce){ staticFrame(); }
+  else{
+    start();
+    document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : start(); });
+  }
+})();
+
+/* ==========================================
+   Order form → POST /api/order
+   ========================================== */
+(function(){
+  var form = document.getElementById('order-form');
+  if(!form) return;
+  var btn = document.getElementById('submit-btn');
+  var label = document.getElementById('submit-label');
+  var spinner = document.getElementById('spinner');
+  var msg = document.getElementById('form-msg');
+
+  function setMsg(text,type){ msg.textContent=text; msg.className='form-msg'+(type?' '+type:''); }
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    setMsg('','');
+
+    var data = Object.fromEntries(new FormData(form).entries());
+
+    /* client-side required check */
+    var required = ['name','contact_method','contact_handle','project_type','details'];
+    for(var i=0;i<required.length;i++){
+      if(!String(data[required[i]]||'').trim()){
+        setMsg('Please fill in every required field (marked *).','err');
+        var el=form.elements[required[i]]; if(el) el.focus();
+        return;
+      }
+    }
+
+    btn.disabled=true; spinner.style.display='inline-block'; label.textContent='Sending…';
+
+    try{
+      var res = await fetch('/api/order',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      var out = await res.json().catch(function(){return {};});
+      if(res.ok && out.ok){
+        form.reset();
+        setMsg('Sent. Your request just landed in my Telegram — I\'ll reply soon. ✦','ok');
+      }else{
+        setMsg(out.error || 'Something went wrong sending that. Try again in a moment.','err');
+      }
+    }catch(err){
+      setMsg('Network hiccup — check your connection and try again.','err');
+    }finally{
+      btn.disabled=false; spinner.style.display='none'; label.textContent='Send my request';
+    }
+  });
+})();
+</script>
+</body>
+</html>
