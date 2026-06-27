@@ -11,11 +11,18 @@
 <meta property="og:title" content="Amir Collider — Web & Game Developer" />
 <meta property="og:description" content="Cute webs & indie games, made just for you." />
 
-<link rel="icon" href="/assets/logo.png" />
+<link rel="icon" href="/assets/AmirColliderLogo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- one rounded family per language: Quicksand (Latin) · Zen Maru Gothic (JP) · Vazirmatn (FA) -->
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<!-- ==========================================
+     logoFail — graceful logo fallback (defined early)
+     ========================================== -->
+<script>
+function logoFail(img){try{var p=img.parentElement;if(p)p.classList.add('mark-fallback');img.remove();}catch(e){}}
+</script>
 
 <style>
 /* ==========================================
@@ -89,13 +96,15 @@ body{
   -webkit-font-smoothing:antialiased;
   transition:background .35s ease,color .35s ease;
 }
-body::before{ /* soft static nebula — no animation */
+body::before{ /* soft, slowly breathing nebula */
   content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
     radial-gradient(620px 440px at 82% -6%,rgba(63,182,255,.16),transparent 62%),
     radial-gradient(560px 420px at 8% 4%,rgba(255,128,149,.14),transparent 62%),
     radial-gradient(500px 500px at 50% 108%,rgba(185,168,255,.12),transparent 60%);
+  animation:nebula 18s ease-in-out infinite alternate;
 }
+@keyframes nebula{0%{transform:scale(1) translateY(0);opacity:.95}100%{transform:scale(1.06) translateY(-10px);opacity:1}}
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -104,14 +113,31 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px;position:relative;z-index:1}
 
+/* ==========================================
+   Floating kawaii emoji layer
+   ========================================== */
+.floaties{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.floatie{position:absolute;bottom:-8vh;will-change:transform,opacity;opacity:0;
+  filter:drop-shadow(0 6px 12px rgba(120,90,160,.18));
+  animation-name:floatUp;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
+@keyframes floatUp{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  8%{opacity:.75}
+  50%{transform:translateY(-55vh) translateX(14px) rotate(10deg)}
+  92%{opacity:.75}
+  100%{transform:translateY(-112vh) translateX(-10px) rotate(-8deg);opacity:0}
+}
+
 /* centered eyebrow with sparkle */
 .eyebrow{
   display:inline-flex;align-items:center;gap:.4rem;
   font-size:.82rem;font-weight:600;letter-spacing:.02em;
   color:var(--blue-ink);background:var(--blue-soft);
   padding:.35rem .85rem;border-radius:999px;
+  animation:eyebrowPulse 3.4s ease-in-out infinite;
 }
 .eyebrow.red{color:var(--red-ink);background:var(--red-soft)}
+@keyframes eyebrowPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 
 /* ==========================================
    Buttons — rounded & soft
@@ -123,9 +149,14 @@ button,input,select,textarea{font:inherit;color:inherit}
   transition:transform .18s ease,box-shadow .25s ease,background .2s ease,border-color .2s ease;
 }
 .btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 26px -10px rgba(63,182,255,.65)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px -10px rgba(255,128,149,.6)}
+.btn-primary:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 16px 34px -10px rgba(255,128,149,.6)}
 .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--line-strong);box-shadow:var(--shadow-sm)}
 .btn-ghost:hover{transform:translateY(-2px);border-color:var(--blue)}
+.hero .btn-primary{animation:ctaPulse 3s ease-in-out infinite}
+@keyframes ctaPulse{
+  0%,100%{box-shadow:0 10px 26px -12px rgba(63,182,255,.6)}
+  50%{box-shadow:0 16px 36px -8px rgba(255,128,149,.7)}
+}
 
 /* ==========================================
    Navigation
@@ -136,11 +167,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:1.05rem}
 .brand .mark{width:34px;height:34px;border-radius:11px;overflow:hidden;flex:0 0 auto;box-shadow:0 6px 16px -8px rgba(63,182,255,.7)}
 .brand .mark img{width:100%;height:100%;object-fit:cover}
+.brand:hover .mark{animation:wiggle .5s ease}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
 .nav-ctrls{display:flex;align-items:center;gap:.5rem}
 .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px}
 .seg button{border:0;background:transparent;cursor:pointer;font-weight:600;font-size:.8rem;color:var(--text-dim);
   padding:.32rem .7rem;border-radius:999px;transition:all .18s ease}
-.seg button.on{background:var(--grad);color:#fff;box-shadow:0 4px 12px -6px rgba(63,182,255,.7)}
+.seg button.on{background:var(--grad);color:#fff;box-shadow:0 4px 12px -6px rgba(63,182,255,.7);animation:segPop .32s ease}
+@keyframes segPop{0%{transform:scale(.9)}60%{transform:scale(1.09)}100%{transform:scale(1)}}
 .icon-btn{width:38px;height:38px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
   cursor:pointer;display:grid;place-items:center;font-size:1.05rem;box-shadow:var(--shadow-sm);transition:transform .18s ease}
 .icon-btn:hover{transform:translateY(-2px) rotate(-8deg)}
@@ -150,21 +184,27 @@ button,input,select,textarea{font:inherit;color:inherit}
    ========================================== */
 .hero{text-align:center;padding:clamp(48px,9vw,96px) 0 clamp(40px,7vw,72px)}
 .hero .avatar{width:104px;height:104px;margin:0 auto;border-radius:30px;overflow:hidden;
-  box-shadow:0 18px 40px -16px rgba(63,182,255,.6),0 0 0 6px var(--surface);position:relative}
+  box-shadow:0 18px 40px -16px rgba(63,182,255,.6),0 0 0 6px var(--surface);position:relative;
+  animation:bob 5s ease-in-out infinite}
 .hero .avatar img{width:100%;height:100%;object-fit:cover}
 .hero .avatar::after{content:"✦";position:absolute;top:-10px;inset-inline-end:-8px;color:var(--red);font-size:1.4rem;
-  filter:drop-shadow(0 0 8px rgba(255,128,149,.7))}
+  filter:drop-shadow(0 0 8px rgba(255,128,149,.7));animation:twinkle 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes twinkle{0%,100%{opacity:.55;transform:scale(.85) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(16deg)}}
 .hero h1{
   font-weight:700;font-size:clamp(2.1rem,5.6vw,3.6rem);line-height:1.18;letter-spacing:-.01em;
   max-width:18ch;margin:1.3rem auto 0}
-.hero h1 .hi{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 .hi{background:var(--grad);background-size:220% 220%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:hueShift 6s ease infinite}
+@keyframes hueShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .hero .lead{margin:1.1rem auto 0;font-size:clamp(1rem,2vw,1.18rem);color:var(--text-dim);max-width:50ch}
 .hero .cta-row{margin-top:1.9rem;display:flex;gap:.9rem;flex-wrap:wrap;justify-content:center}
 .eyebrow-wrap{display:flex;justify-content:center}
 
 .stats{margin:3rem auto 0;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;max-width:760px}
 .stat{flex:1 1 180px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:1.1rem 1rem;box-shadow:var(--shadow-sm)}
+  padding:1.1rem 1rem;box-shadow:var(--shadow-sm);transition:transform .2s ease,box-shadow .25s ease}
+.stat:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
 .stat .n{font-weight:700;font-size:1.5rem}
 .stat .l{font-size:.82rem;color:var(--text-faint);margin-top:.15rem}
 
@@ -206,9 +246,12 @@ section{position:relative;z-index:1;padding:clamp(48px,7vw,84px) 0}
 @media(max-width:820px){.steps{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:460px){.steps{grid-template-columns:1fr}}
 .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:1.4rem 1.2rem;text-align:center;box-shadow:var(--shadow-sm)}
+  padding:1.4rem 1.2rem;text-align:center;box-shadow:var(--shadow-sm);transition:transform .2s ease,box-shadow .25s ease}
+.step:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
 .step .num{width:42px;height:42px;margin:0 auto .7rem;border-radius:999px;display:grid;place-items:center;
-  font-weight:700;color:#fff;background:var(--grad);box-shadow:0 8px 18px -8px rgba(63,182,255,.7)}
+  font-weight:700;color:#fff;background:var(--grad);box-shadow:0 8px 18px -8px rgba(63,182,255,.7);
+  animation:numPulse 3.2s ease-in-out infinite}
+@keyframes numPulse{0%,100%{transform:scale(1);box-shadow:0 8px 18px -8px rgba(63,182,255,.7)}50%{transform:scale(1.07);box-shadow:0 12px 22px -8px rgba(255,128,149,.7)}}
 .step h4{font-weight:700;font-size:1.05rem;margin-bottom:.35rem}
 .step p{color:var(--text-dim);font-size:.9rem}
 
@@ -249,18 +292,38 @@ button[disabled]{opacity:.6;cursor:not-allowed;transform:none!important}
    ========================================== */
 footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
 .foot .links{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;margin-bottom:.8rem;font-weight:600;font-size:.9rem}
-.foot .links a{color:var(--text-dim)}
-.foot .links a:hover{color:var(--blue-ink)}
+.foot .links a{color:var(--text-dim);transition:color .18s ease,transform .18s ease}
+.foot .links a:hover{color:var(--blue-ink);transform:translateY(-2px)}
 .foot .sig{font-size:.82rem;color:var(--text-faint)}
 
 /* ==========================================
-   Gentle reveal (calm, short, optional)
+   Logo fallback (when the image fails to load)
+   ========================================== */
+.mark.mark-fallback,.avatar.mark-fallback{background:var(--grad);display:grid;place-items:center}
+.mark.mark-fallback::before{content:"✦";color:#fff;font-size:1rem;font-weight:700}
+.avatar.mark-fallback::before{content:"✦";color:#fff;font-size:2.4rem;font-weight:700}
+
+/* ==========================================
+   Language-switch fade (RTL/LTR aware)
+   ========================================== */
+header .wrap,section .wrap,footer .wrap{transition:opacity .2s ease,filter .2s ease,transform .2s ease}
+body.lang-swapping header .wrap,
+body.lang-swapping section .wrap,
+body.lang-swapping footer .wrap{opacity:0;filter:blur(4px);transform:translateY(6px)}
+
+/* ==========================================
+   Gentle reveal
    ========================================== */
 .reveal{opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
 .reveal.in{opacity:1;transform:none}
+
+/* ==========================================
+   Reduced motion — calm everything down
+   ========================================== */
 @media(prefers-reduced-motion:reduce){
-  *{scroll-behavior:auto!important;transition:none!important}
+  *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
   .reveal{opacity:1;transform:none}
+  .floaties{display:none}
 }
 </style>
 </head>
@@ -272,7 +335,7 @@ footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
 <nav class="nav">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Amir Collider — home">
-      <span class="mark"><img id="brand-logo" src="/assets/logo.png" alt="Amir Collider logo" /></span>
+      <span class="mark" id="brand-mark"><img id="brand-logo" src="/assets/AmirColliderLogo.png" alt="Amir Collider logo" onerror="logoFail(this)" /></span>
       Collider
     </a>
     <div class="nav-ctrls">
@@ -291,7 +354,7 @@ footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
      ========================================== -->
 <header class="hero" id="top">
   <div class="wrap">
-    <div class="avatar"><img id="hero-logo" src="/assets/logo.png" alt="Amir Collider logo" /></div>
+    <div class="avatar" id="hero-mark"><img id="hero-logo" src="/assets/AmirColliderLogo.png" alt="Amir Collider logo" onerror="logoFail(this)" /></div>
     <div class="eyebrow-wrap"><p class="eyebrow" data-i18n="hero.eyebrow" style="margin-top:1.3rem">✦ Amir Collider — web &amp; game developer</p></div>
     <h1 data-i18n-html="hero.title">Cute webs &amp; playful games, <span class="hi">made just for you.</span></h1>
     <p class="lead" data-i18n="hero.lead">Hi, I'm Amir — I build soft, friendly websites that feel like yours, plus the indie games behind the brand. Write what you need below; it reaches my Telegram in seconds.</p>
@@ -301,7 +364,7 @@ footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
     </div>
     <div class="stats">
       <div class="stat reveal"><div class="n" data-i18n="stat.1.n">4+</div><div class="l" data-i18n="stat.1.l">shipped projects</div></div>
-      <div class="stat reveal"><div class="n" data-i18n="stat.2.n">Edge</div><div class="l" data-i18n="stat.2.l">fast hosting</div></div>
+      <div class="stat reveal"><div class="n" data-i18n="stat.2.n">Cloudflare</div><div class="l" data-i18n="stat.2.l">free forever hosting</div></div>
       <div class="stat reveal"><div class="n" data-i18n="stat.3.n">&lt;1 day</div><div class="l" data-i18n="stat.3.l">usual first reply</div></div>
     </div>
   </div>
@@ -318,13 +381,13 @@ footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
       <p data-i18n="work.intro">Games, storefronts, and tools — each one from design all the way to launch.</p>
     </div>
     <div class="work-grid">
-      <article class="card reveal">
+      <article class="card soon reveal">
         <span class="tag" data-i18n="p.katana.tag">Indie game · Android</span>
         <h3>Neon Katana</h3>
         <p data-i18n="p.katana.desc">A neon-sword action game under AmirCollider Games, with a custom login flow and live leaderboards.</p>
         <div class="meta">
           <div class="chips"><span class="chip">Unity</span><span class="chip">C#</span><span class="chip">Myket</span></div>
-          <a class="go" href="https://myket.ir/app/com.AmirColliderGames.NeonKatana" target="_blank" rel="noopener" data-i18n="p.katana.go">View ↗</a>
+          <span class="go" data-i18n="p.katana.go">Coming soon</span>
         </div>
       </article>
 
@@ -375,7 +438,7 @@ footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
       <div class="step reveal"><div class="num">1</div><h4 data-i18n="proc.1.t">Send the brief</h4><p data-i18n="proc.1.d">Fill the form below. It pings my Telegram the moment you send it.</p></div>
       <div class="step reveal"><div class="num">2</div><h4 data-i18n="proc.2.t">We plan it</h4><p data-i18n="proc.2.d">I reply to settle the look, features, timeline, and a fair price.</p></div>
       <div class="step reveal"><div class="num">3</div><h4 data-i18n="proc.3.t">I build</h4><p data-i18n="proc.3.d">Design and code, with previews you can react to along the way.</p></div>
-      <div class="step reveal"><div class="num">4</div><h4 data-i18n="proc.4.t">Launch</h4><p data-i18n="proc.4.d">Published to your own domain — the site is yours to keep.</p></div>
+      <div class="step reveal"><div class="num">4</div><h4 data-i18n="proc.4.t">Launch</h4><p data-i18n="proc.4.d">Published live on Cloudflare — hosting stays free for life with zero monthly upkeep, and the site is yours to keep.</p></div>
     </div>
   </div>
 </section>
@@ -480,18 +543,21 @@ footer{border-top:1px solid var(--line);padding:40px 0 56px;text-align:center}
 
 <script>
 /* ==========================================
-   Logo source — set to your R2 public URL if you
+   Logo source — point this at your R2 public URL if you
    enable public access on the bucket, e.g.
-   "https://pub-XXXX.r2.dev/AmirColliderLogo.png".
-   Default: the file bundled at /assets/logo.png
+   "https://pub-XXXXXXXX.r2.dev/AmirColliderLogo.png".
+   Default: the file bundled at /assets/AmirColliderLogo.png
    ========================================== */
-var LOGO_URL = "/assets/logo.png";
+var LOGO_URL = "/assets/AmirColliderLogo.png";
 (function(){
   var l1=document.getElementById('brand-logo'), l2=document.getElementById('hero-logo');
   if(l1) l1.src=LOGO_URL; if(l2) l2.src=LOGO_URL;
 })();
 
 document.getElementById('year').textContent = new Date().getFullYear();
+
+/* reduced-motion flag (used by language switch + floaties) */
+var REDUCE = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 /* ==========================================
    i18n dictionary — fa / en / ja
@@ -502,9 +568,9 @@ var I18N = {
     "hero.title":"Cute webs & playful games, <span class='hi'>made just for you.</span>",
     "hero.lead":"Hi, I'm Amir — I build soft, friendly websites that feel like yours, plus the indie games behind the brand. Write what you need below; it reaches my Telegram in seconds.",
     "hero.cta1":"Start a project","hero.cta2":"See the work",
-    "stat.1.n":"4+","stat.1.l":"shipped projects","stat.2.n":"Edge","stat.2.l":"fast hosting","stat.3.n":"<1 day","stat.3.l":"usual first reply",
+    "stat.1.n":"4+","stat.1.l":"shipped projects","stat.2.n":"Cloudflare","stat.2.l":"free forever hosting","stat.3.n":"<1 day","stat.3.l":"usual first reply",
     "work.eyebrow":"✦ selected work","work.title":"Things I've made","work.intro":"Games, storefronts, and tools — each one from design all the way to launch.",
-    "p.katana.tag":"Indie game · Android","p.katana.desc":"A neon-sword action game under AmirCollider Games, with a custom login flow and live leaderboards.","p.katana.go":"View ↗",
+    "p.katana.tag":"Indie game · Android","p.katana.desc":"A neon-sword action game under AmirCollider Games, with a custom login flow and live leaderboards.","p.katana.go":"Coming soon",
     "p.jazzy.tag":"Client site · Commissions","p.jazzy.desc":"A cozy commission storefront for an illustrator — soft, anime-ish, with an order form that pings her instantly.","p.jazzy.go":"Visit ↗",
     "p.string.tag":"Indie game · In development","p.string.desc":"A psychological meta-horror game with glitchy, reality-bending transitions. Currently in development.","p.string.go":"Coming soon",
     "p.oauth.tag":"Infrastructure · Edge","p.oauth.desc":"An edge authentication gateway on Cloudflare Workers — multilingual, powering login across the games.","p.oauth.go":"View ↗",
@@ -512,7 +578,7 @@ var I18N = {
     "proc.1.t":"Send the brief","proc.1.d":"Fill the form below. It pings my Telegram the moment you send it.",
     "proc.2.t":"We plan it","proc.2.d":"I reply to settle the look, features, timeline, and a fair price.",
     "proc.3.t":"I build","proc.3.d":"Design and code, with previews you can react to along the way.",
-    "proc.4.t":"Launch","proc.4.d":"Published to your own domain — the site is yours to keep.",
+    "proc.4.t":"Launch","proc.4.d":"Published live on Cloudflare — hosting stays free for life with zero monthly upkeep, and the site is yours to keep.",
     "form.eyebrow":"✦ start a project","form.title":"Tell me what to build","form.intro":"The more you share, the sharper my first reply. Sending this is no commitment — it just opens the chat.",
     "form.note":"Your request reaches me privately on Telegram. I'll message you back using the contact you choose. 💌",
     "f.name":"Your name *","f.name.ph":"What should I call you?",
@@ -527,13 +593,13 @@ var I18N = {
     "msg.required":"Please fill in the fields marked with *.","msg.ok":"Sent! Your request just reached my Telegram — I'll reply soon ✦","msg.err":"Something went wrong. Please try again in a moment.","msg.net":"Connection hiccup — check your internet and try again.","msg.sending":"Sending…"
   },
   fa:{
-    "hero.eyebrow":"✦ امیر کولایدر — توسعه‌دهنده‌ی وب و بازی",
+    "hero.eyebrow":"✦ امیر کُلایدر — توسعه‌دهنده‌ی وب و بازی",
     "hero.title":"وب‌های نازِ و بازی‌های بامزه، <span class='hi'>مخصوصِ خودت.</span>",
     "hero.lead":"سلام، من امیرم — وب‌سایت‌هایی می‌سازم که نرم، دوست‌داشتنی و مالِ خودت باشن، در کنار بازی‌های ایندیِ پشت برند. پایین برام بنویس چی می‌خوای؛ همون لحظه به تلگرامم می‌رسه.",
     "hero.cta1":"شروع پروژه","hero.cta2":"دیدن کارها",
-    "stat.1.n":"۴+","stat.1.l":"پروژه‌ی منتشرشده","stat.2.n":"Edge","stat.2.l":"میزبانی سریع","stat.3.n":"زیر ۱ روز","stat.3.l":"معمولاً اولین پاسخ",
+    "stat.1.n":"۴+","stat.1.l":"پروژه‌ی منتشرشده","stat.2.n":"Cloudflare","stat.2.l":"میزبانیِ همیشه‌رایگان","stat.3.n":"زیر ۱ روز","stat.3.l":"معمولاً اولین پاسخ",
     "work.eyebrow":"✦ کارهای منتخب","work.title":"چیزهایی که ساخته‌ام","work.intro":"بازی، فروشگاه و ابزار — هرکدوم از طراحی تا انتشار.",
-    "p.katana.tag":"بازی ایندی · اندروید","p.katana.desc":"یک بازی اکشنِ شمشیر نئونی زیر برند AmirCollider Games، با ورودِ سفارشی و جدول امتیازاتِ زنده.","p.katana.go":"مشاهده ↗",
+    "p.katana.tag":"بازی ایندی · اندروید","p.katana.desc":"یک بازی اکشنِ شمشیر نئونی زیر برند AmirCollider Games، با ورودِ سفارشی و جدول امتیازاتِ زنده.","p.katana.go":"به‌زودی",
     "p.jazzy.tag":"سایت سفارشی · کامیشن","p.jazzy.desc":"یک فروشگاه دنجِ سفارش نقاشی برای یک تصویرگر — نرم، انیمه‌ای، با فرمی که همون لحظه بهش خبر می‌ده.","p.jazzy.go":"بازدید ↗",
     "p.string.tag":"بازی ایندی · در حال ساخت","p.string.desc":"یک بازی متا-وحشتِ روان‌شناختی با گذارهای گلیچی و واقعیت‌شکن. فعلاً در حال ساخت.","p.string.go":"به‌زودی",
     "p.oauth.tag":"زیرساخت · Edge","p.oauth.desc":"یک دروازه‌ی احراز هویت روی Cloudflare Workers — چندزبانه، که ورود را در بازی‌ها مدیریت می‌کند.","p.oauth.go":"مشاهده ↗",
@@ -541,7 +607,7 @@ var I18N = {
     "proc.1.t":"ارسال درخواست","proc.1.d":"فرم پایین رو پر کن. همون لحظه که بفرستی به تلگرامم میاد.",
     "proc.2.t":"هماهنگی","proc.2.d":"جواب می‌دم تا ظاهر، امکانات، زمان و یک قیمتِ منصفانه مشخص شه.",
     "proc.3.t":"ساخت","proc.3.d":"طراحی و کدنویسی، با پیش‌نمایش‌هایی که در طول کار می‌بینی.",
-    "proc.4.t":"انتشار","proc.4.d":"روی دامنه‌ی خودت منتشر می‌شه — سایت مالِ خودته.",
+    "proc.4.t":"انتشار","proc.4.d":"روی Cloudflare منتشر می‌شه؛ میزبانی مادام‌العمر رایگانه و هیچ هزینه‌ی نگه‌داریِ ماهانه نداره — سایت مالِ خودته.",
     "form.eyebrow":"✦ شروع پروژه","form.title":"بهم بگو چی بسازم","form.intro":"هرچی بیشتر توضیح بدی، اولین جوابم دقیق‌تره. فرستادنش هیچ تعهدی نداره — فقط گفتگو رو شروع می‌کنه.",
     "form.note":"درخواستت به‌صورت خصوصی به تلگرام من می‌رسه. از همون راهی که انتخاب کنی بهت پیام می‌دم. 💌",
     "f.name":"اسمت *","f.name.ph":"چی صدات کنم؟",
@@ -552,7 +618,7 @@ var I18N = {
     "f.timeline":"کِی لازمش داری؟","f.timeline.ph":"مثلاً تا ۲ هفته، عجله‌ای نیست، فوری…",
     "f.details":"پروژه رو توضیح بده *","f.details.ph":"برای چیه، برای کیه، سایت‌هایی که دوست داری، امکاناتِ لازم…",
     "f.submit":"ارسال درخواست",
-    "foot.start":"شروع پروژه","foot.sig":"© __Y__ امیر کولایدر · ساختِ وب‌های نازِ و بازی‌های ایندی 🪐",
+    "foot.start":"شروع پروژه","foot.sig":"© __Y__ امیر کُلایدر · ساختِ وب‌های نازِ و بازی‌های ایندی 🪐",
     "msg.required":"لطفاً فیلدهای ستاره‌دار (*) رو پر کن.","msg.ok":"فرستاده شد! درخواستت رسید به تلگرامم — زود جواب می‌دم ✦","msg.err":"یه مشکلی پیش اومد. چند لحظه دیگه دوباره امتحان کن.","msg.net":"اتصالت قطع شد — اینترنت رو چک کن و دوباره بفرست.","msg.sending":"در حال ارسال…"
   },
   ja:{
@@ -560,9 +626,9 @@ var I18N = {
     "hero.title":"かわいいウェブと、たのしいゲームを、<span class='hi'>あなたのために。</span>",
     "hero.lead":"こんにちは、Amir です。やさしくて、あなただけのウェブサイトを作ります。ブランドの裏にあるインディーゲームも。作りたいものを下に書いてね。すぐに僕の Telegram に届くよ。",
     "hero.cta1":"依頼する","hero.cta2":"制作を見る",
-    "stat.1.n":"4+","stat.1.l":"公開プロジェクト","stat.2.n":"Edge","stat.2.l":"高速ホスティング","stat.3.n":"1日以内","stat.3.l":"だいたいの初返信",
+    "stat.1.n":"4+","stat.1.l":"公開プロジェクト","stat.2.n":"Cloudflare","stat.2.l":"ずっと無料ホスティング","stat.3.n":"1日以内","stat.3.l":"だいたいの初返信",
     "work.eyebrow":"✦ 制作実績","work.title":"つくってきたもの","work.intro":"ゲーム、ストア、ツール — ぜんぶ設計から公開まで。",
-    "p.katana.tag":"インディーゲーム · Android","p.katana.desc":"AmirCollider Games のネオン刀アクションゲーム。独自ログインとライブのリーダーボード付き。","p.katana.go":"見る ↗",
+    "p.katana.tag":"インディーゲーム · Android","p.katana.desc":"AmirCollider Games のネオン刀アクションゲーム。独自ログインとライブのリーダーボード付き。","p.katana.go":"近日公開",
     "p.jazzy.tag":"クライアント · コミッション","p.jazzy.desc":"イラストレーターのための、やさしくてアニメっぽい依頼サイト。フォームを送るとすぐ本人に届くよ。","p.jazzy.go":"見る ↗",
     "p.string.tag":"インディーゲーム · 開発中","p.string.desc":"グリッチと現実が歪むメタホラー。心理系のゲームで、いま開発中。","p.string.go":"近日公開",
     "p.oauth.tag":"インフラ · Edge","p.oauth.desc":"Cloudflare Workers 上の認証ゲートウェイ。多言語対応で、ゲームのログインを支えているよ。","p.oauth.go":"見る ↗",
@@ -570,7 +636,7 @@ var I18N = {
     "proc.1.t":"依頼を送る","proc.1.d":"下のフォームを送ると、その瞬間に Telegram に届くよ。",
     "proc.2.t":"すり合わせ","proc.2.d":"見た目・機能・期間・ちょうどいい料金を一緒に決めるよ。",
     "proc.3.t":"制作","proc.3.d":"デザインとコード。途中のプレビューも見られるよ。",
-    "proc.4.t":"公開","proc.4.d":"きみのドメインに公開。サイトはきみのものだよ。",
+    "proc.4.t":"公開","proc.4.d":"Cloudflare に公開。ホスティングはずっと無料で、月々の維持費もゼロ。サイトはきみのものだよ。",
     "form.eyebrow":"✦ 依頼する","form.title":"作りたいものを教えてね","form.intro":"くわしく書くほど、最初の返信が的確になるよ。送っても約束は何もないよ — まず話してみよう。",
     "form.note":"リクエストは僕の Telegram にプライベートで届くよ。選んだ連絡先で返信するね。💌",
     "f.name":"お名前 *","f.name.ph":"なんて呼べばいい？",
@@ -587,10 +653,10 @@ var I18N = {
 };
 
 /* ==========================================
-   Language switching (RTL-aware, persisted)
+   writeLang — apply a language to the DOM
    ========================================== */
 var curLang = "en";
-function applyLang(lang){
+function writeLang(lang){
   if(!I18N[lang]) lang="en";
   curLang=lang;
   var dict=I18N[lang];
@@ -618,8 +684,24 @@ function applyLang(lang){
   });
   try{ localStorage.setItem("collider-lang", lang); }catch(e){}
 }
+
+/* ==========================================
+   applyLang — animated language switch (RTL-aware)
+   ========================================== */
+function applyLang(lang, animate){
+  if(!I18N[lang]) lang="en";
+  if(animate && !REDUCE){
+    document.body.classList.add("lang-swapping");
+    window.setTimeout(function(){
+      writeLang(lang);
+      requestAnimationFrame(function(){ document.body.classList.remove("lang-swapping"); });
+    }, 200);
+  }else{
+    writeLang(lang);
+  }
+}
 document.querySelectorAll(".seg button").forEach(function(b){
-  b.addEventListener("click", function(){ applyLang(b.getAttribute("data-lang")); });
+  b.addEventListener("click", function(){ applyLang(b.getAttribute("data-lang"), true); });
 });
 
 /* ==========================================
@@ -636,14 +718,41 @@ document.getElementById("theme-btn").addEventListener("click", function(){
   applyTheme(cur==="dark" ? "light" : "dark");
 });
 
-/* initial language + theme */
+/* ==========================================
+   Initial language + theme
+   ========================================== */
 (function(){
   var savedLang, savedTheme;
   try{ savedLang=localStorage.getItem("collider-lang"); savedTheme=localStorage.getItem("collider-theme"); }catch(e){}
   var lang = savedLang || ((navigator.language||"en").slice(0,2));
-  applyLang(["en","fa","ja"].indexOf(lang)>=0 ? lang : "en");
+  applyLang(["en","fa","ja"].indexOf(lang)>=0 ? lang : "en", false);
   var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   applyTheme(savedTheme || (prefersDark ? "dark" : "light"));
+})();
+
+/* ==========================================
+   Floating kawaii emoji — cakes, bubble tea, sparkles
+   ========================================== */
+(function(){
+  if(REDUCE) return;
+  var layer=document.createElement("div");
+  layer.className="floaties";
+  layer.setAttribute("aria-hidden","true");
+  document.body.appendChild(layer);
+
+  var set=["🍰","🧋","✨","✦","🪐","🌸","⭐","💫","🍓","🫧","🎀","🍡"];
+  var N=14;
+  for(var i=0;i<N;i++){
+    var s=document.createElement("span");
+    s.className="floatie";
+    s.textContent=set[Math.floor(Math.random()*set.length)];
+    s.style.left=(Math.random()*100).toFixed(2)+"%";
+    s.style.fontSize=(Math.random()*1.4+1).toFixed(2)+"rem";
+    var dur=(Math.random()*16+16);                 // 16–32s
+    s.style.animationDuration=dur.toFixed(1)+"s";
+    s.style.animationDelay=(-Math.random()*dur).toFixed(1)+"s";
+    layer.appendChild(s);
+  }
 })();
 
 /* ==========================================
