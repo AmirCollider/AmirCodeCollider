@@ -34,8 +34,9 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   // Required secrets
+  // Chat id accepts TELEGRAM_CHAT_ID (preferred) or the legacy "AmirCollider" var.
   const token = env.TELEGRAM_BOT_TOKEN;
-  const chatId = env.TELEGRAM_CHAT_ID;
+  const chatId = env.TELEGRAM_CHAT_ID || env.AmirCollider;
   if (!token || !chatId) {
     return json({ ok: false, error: "Server not configured." }, 500);
   }
