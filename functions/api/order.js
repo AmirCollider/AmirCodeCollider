@@ -1,20 +1,28 @@
 // ==========================================
 // Order Endpoint — POST /api/order
-// AmirCollider — amircodecollider
-// Receives a website-build request and forwards
-// it to the Telegram bot. Token + chat id live in
-// Cloudflare env vars, never in the browser.
+// AmirCollider Games — amircodecollider
+// Receives a website-build request and forwards it to
+// Telegram with a clean, professional message card.
+// Token + chat id live in Cloudflare env vars, never
+// in the browser.
 // ==========================================
+
+// ==========================================
+// Config
+// ==========================================
+const MAX_FIELD = 1500;          // hard cap per field (chars)
+const MAX_DETAILS = 3500;        // details may be longer
+const TG_TIMEOUT_MS = 10000;     // abort Telegram call after 10s
 
 // ==========================================
 // escapeHtml — neutralize input for Telegram HTML parse mode
 // ==========================================
-function escapeHtml(value) {
+function escapeHtml(value, limit) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .slice(0, 1500);
+    .slice(0, limit || MAX_FIELD);
 }
 
 // ==========================================
@@ -28,12 +36,69 @@ function json(body, status) {
 }
 
 // ==========================================
+// shortId — readable, ambiguity-free request id
+// ==========================================
+function shortId() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  let out = "";
+  for (const b of bytes) out += alphabet[b % alphabet.length];
+  return out;
+}
+
+// ==========================================
+// fmtTime — human-readable Tehran timestamp
+// ==========================================
+function fmtTime(date) {
+  try {
+    return new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Tehran",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  } catch (_) {
+    return date.toISOString();
+  }
+}
+
+// ==========================================
+// buildKeyboard — one-tap reply button for the dev
+// (Telegram inline buttons require http/https URLs)
+// ==========================================
+function buildKeyboard(method, handle) {
+  const raw = String(handle || "").trim().replace(/^@/, "");
+  if (!raw) return null;
+
+  let url = null;
+  let label = null;
+
+  if (method === "Telegram" && /^[A-Za-z0-9_]{3,}$/.test(raw)) {
+    url = "https://t.me/" + raw;
+    label = "💬 Open Telegram";
+  } else if (method === "Instagram") {
+    const user = raw
+      .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+      .replace(/\/+$/, "");
+    if (/^[A-Za-z0-9_.]{1,30}$/.test(user)) {
+      url = "https://instagram.com/" + user;
+      label = "📷 Open Instagram";
+    }
+  }
+
+  if (!url) return null;
+  return { inline_keyboard: [[{ text: label, url }]] };
+}
+
+// ==========================================
 // onRequestPost — main handler
 // ==========================================
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  // Required secrets
+  // Required secrets.
   // Chat id accepts TELEGRAM_CHAT_ID (preferred) or the legacy "AmirCollider" var.
   const token = env.TELEGRAM_BOT_TOKEN;
   const chatId = env.TELEGRAM_CHAT_ID || env.AmirCollider;
@@ -62,42 +127,63 @@ export async function onRequestPost(context) {
     }
   }
 
-  // Build the Telegram message
+  // Request metadata (Cloudflare edge)
+  const id = shortId();
+  const time = fmtTime(new Date());
+  const cf = request.cf || {};
+  const ip = request.headers.get("CF-Connecting-IP") || "—";
+  const country = request.headers.get("CF-IPCountry") || cf.country || "—";
+  const city = cf.city || "—";
+
+  // Build the Telegram message card
   const lines = [
-    "🌐 <b>New website request</b>",
-    "———————————————",
-    `👤 <b>Name:</b> ${escapeHtml(data.name)}`,
-    `📦 <b>Project:</b> ${escapeHtml(data.project_type)}`,
-    `💰 <b>Budget:</b> ${escapeHtml(data.budget || "—")}`,
-    `⏱️ <b>Timeline:</b> ${escapeHtml(data.timeline || "—")}`,
-    `📨 <b>Contact:</b> ${escapeHtml(data.contact_method)} — ${escapeHtml(data.contact_handle)}`,
-    "———————————————",
-    "📝 <b>Details:</b>",
-    escapeHtml(data.details),
-    "———————————————",
-    "<i>Sent from amircodecollider</i>",
+    `🌐 <b>New project request</b>  ·  <code>#${id}</code>`,
+    "",
+    `👤 <b>Name</b> — ${escapeHtml(data.name)}`,
+    `📦 <b>Project</b> — ${escapeHtml(data.project_type)}`,
+    `💰 <b>Budget</b> — ${escapeHtml(data.budget || "—")}`,
+    `⏱ <b>Timeline</b> — ${escapeHtml(data.timeline || "—")}`,
+    `📨 <b>Contact</b> — ${escapeHtml(data.contact_method)} · ${escapeHtml(data.contact_handle)}`,
+    "",
+    "📝 <b>Details</b>",
+    escapeHtml(data.details, MAX_DETAILS),
+    "",
+    "————————————————",
+    `🌍 ${escapeHtml(city)}, ${escapeHtml(country)}  ·  <code>${escapeHtml(ip)}</code>`,
+    `🕒 ${escapeHtml(time)} (Tehran)`,
+    "🔗 <i>via amircodecollider</i>",
   ];
   const text = lines.join("\n");
 
-  // Send to Telegram
+  // Payload (+ optional one-tap reply button)
+  const payload = {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+  };
+  const keyboard = buildKeyboard(data.contact_method, data.contact_handle);
+  if (keyboard) payload.reply_markup = keyboard;
+
+  // Send to Telegram (with timeout)
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TG_TIMEOUT_MS);
   try {
     const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      }),
+      body: JSON.stringify(payload),
+      signal: controller.signal,
     });
 
     if (!tgRes.ok) {
       return json({ ok: false, error: "Could not deliver the message." }, 502);
     }
-    return json({ ok: true });
+    return json({ ok: true, id });
   } catch (_) {
     return json({ ok: false, error: "Delivery failed." }, 502);
+  } finally {
+    clearTimeout(timer);
   }
 }
 
