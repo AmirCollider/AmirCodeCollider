@@ -32,16 +32,16 @@
 <div align="center">
 
 <b>English</b><br/>
-<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerenlight.png" alt="English — light theme" width="49%" />
-<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerendark.png"  alt="English — dark theme"  width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/bannerenlight.png" alt="English — light theme" width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/bannerendark.png"  alt="English — dark theme"  width="49%" />
 
 <br/><br/><b>فارسی</b><br/>
-<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerfalight.png" alt="Persian — light theme" width="49%" />
-<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerfadark.png"  alt="Persian — dark theme"  width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/bannerfalight.png" alt="Persian — light theme" width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/bannerfadark.png"  alt="Persian — dark theme"  width="49%" />
 
 <br/><br/><b>日本語</b><br/>
-<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerjplight.png" alt="Japanese — light theme" width="49%" />
-<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerjpdark.png"  alt="Japanese — dark theme"  width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/bannerjplight.png" alt="Japanese — light theme" width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/bannerjpdark.png"  alt="Japanese — dark theme"  width="49%" />
 
 <br/><br/>
 
