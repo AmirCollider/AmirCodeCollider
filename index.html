@@ -85,7 +85,13 @@ html[lang="ja"]{--font:'Zen Maru Gothic',system-ui,sans-serif}
    Reset & base
    ========================================== */
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scrollbar-width:none;-ms-overflow-style:none}
+/* ==========================================
+   Hide scrollbars — scroll stays functional (no visible bars)
+   ========================================== */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar{width:0;height:0;display:none}
 body{
   font-family:var(--font);
   background:var(--bg);
