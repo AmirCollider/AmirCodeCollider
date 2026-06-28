@@ -2,9 +2,10 @@
 // Order Endpoint — POST /api/order
 // AmirCollider Games — amircodecollider
 // Receives a website-build request, drops it if the
-// sender is blocked, stores it in KV, and posts a
-// manageable card to the admin's Telegram.
-// Token + chat id + webhook secret live in env vars.
+// sender is blocked, stores it in the D1 database, and
+// posts a manageable card to the admin's Telegram.
+// Bindings: D1 database "DB".
+// Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (or AmirCollider).
 // ==========================================
 
 // ==========================================
@@ -138,10 +139,16 @@ function projectKeyboard(p) {
 }
 
 // ==========================================
-// KV index helpers
+// ensureSchema — create tables on first use (idempotent)
 // ==========================================
-async function getIndex(KV) { return (await KV.get("__index", { type: "json" })) || []; }
-async function setIndex(KV, arr) { await KV.put("__index", JSON.stringify(arr)); }
+async function ensureSchema(DB) {
+  await DB.batch([
+    DB.prepare("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT, contact_method TEXT, contact_handle TEXT, project_type TEXT, budget TEXT, timeline TEXT, details TEXT, status TEXT DEFAULT 'new', created TEXT, created_h TEXT, origin TEXT, chat_id TEXT, message_id INTEGER)"),
+    DB.prepare("CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status, created DESC)"),
+    DB.prepare("CREATE TABLE IF NOT EXISTS blocked (bid TEXT PRIMARY KEY, method TEXT, handle TEXT, norm TEXT UNIQUE, at TEXT)"),
+    DB.prepare("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"),
+  ]);
+}
 
 // ==========================================
 // onRequestPost — main handler
@@ -151,7 +158,7 @@ export async function onRequestPost(context) {
 
   const token = env.TELEGRAM_BOT_TOKEN;
   const chatId = env.TELEGRAM_CHAT_ID || env.AmirCollider;
-  const KV = env.PROJECTS; // optional KV binding
+  const DB = env.DB; // optional D1 binding
   if (!token || !chatId) {
     return json({ ok: false, error: "Server not configured." }, 500);
   }
@@ -179,9 +186,11 @@ export async function onRequestPost(context) {
 
   // Block check — silently drop requests from blocked senders
   const norm = normContact(data.contact_method, data.contact_handle);
-  if (KV) {
+  if (DB) {
     try {
-      if (await KV.get("blocknorm:" + norm)) return json({ ok: true });
+      await ensureSchema(DB);
+      const hit = await DB.prepare("SELECT 1 AS x FROM blocked WHERE norm=? LIMIT 1").bind(norm).first();
+      if (hit) return json({ ok: true });
     } catch (_) {}
   }
 
@@ -205,16 +214,18 @@ export async function onRequestPost(context) {
     created: now.toISOString(),
     created_h: fmtTime(now),
     origin: `${city}, ${country} · ${ip}`,
+    chat_id: null,
+    message_id: null,
   };
 
-  // Compose payload — full management card when KV is bound, else a simple card
+  // Compose payload — full management card when DB is bound, else a simple card
   const payload = {
     chat_id: chatId,
     text: projectText(p),
     parse_mode: "HTML",
     disable_web_page_preview: true,
   };
-  if (KV) {
+  if (DB) {
     payload.reply_markup = projectKeyboard(p);
   } else {
     const url = contactUrl(p.contact_method, p.contact_handle);
@@ -236,15 +247,18 @@ export async function onRequestPost(context) {
     }
 
     // Persist (so the menu / status / delete / block actions work)
-    if (KV) {
+    if (DB) {
       try {
         let result = null;
         try { result = (await tgRes.json()).result; } catch (_) {}
         if (result) { p.chat_id = String(chatId); p.message_id = result.message_id; }
-        await KV.put("project:" + p.id, JSON.stringify(p));
-        const idx = await getIndex(KV);
-        idx.unshift({ id: p.id, name: p.name, project_type: p.project_type, status: p.status, created: p.created });
-        await setIndex(KV, idx);
+        await DB.prepare(
+          "INSERT INTO projects (id,name,contact_method,contact_handle,project_type,budget,timeline,details,status,created,created_h,origin,chat_id,message_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+        ).bind(
+          p.id, p.name, p.contact_method, p.contact_handle, p.project_type,
+          p.budget, p.timeline, p.details, p.status, p.created, p.created_h,
+          p.origin, p.chat_id, p.message_id
+        ).run();
       } catch (_) {}
     }
 
