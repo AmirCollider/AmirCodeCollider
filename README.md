@@ -27,17 +27,41 @@
 
 </div>
 
+## 📸 Preview
+
+<div align="center">
+
+<b>English</b><br/>
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerenlight.png" alt="English — light theme" width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerendark.png"  alt="English — dark theme"  width="49%" />
+
+<br/><br/><b>فارسی</b><br/>
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerfalight.png" alt="Persian — light theme" width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerfadark.png"  alt="Persian — dark theme"  width="49%" />
+
+<br/><br/><b>日本語</b><br/>
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerjplight.png" alt="Japanese — light theme" width="49%" />
+<img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/bannerjpdark.png"  alt="Japanese — dark theme"  width="49%" />
+
+<br/><br/>
+
+**▶ For the real thing (interactive), open the live site → [amircodecollider.pages.dev](https://amircodecollider.pages.dev)**
+
+</div>
+
 <!--
 ==========================================
-  📸 Preview media — uncomment once the files exist in /assets
-  (kept commented so the README never shows a broken image)
+  ⚡ OPTIONAL — always-fresh "live" preview (auto-updating image)
+  GitHub READMEs can't run JS/iframes, so true interactivity isn't possible here.
+  The closest is an auto-refreshing screenshot served as a plain <img>.
+  Pick ONE and move it up into the Preview block to use it:
+
+  thum.io (real-time):
+  <img src="https://image.thum.io/get/width/1200/https://amircodecollider.pages.dev" width="100%" alt="Live preview" />
+
+  WordPress mShots (free; first load shows a placeholder, then caches — bust with ?v=2):
+  <img src="https://s0.wp.com/mshots/v1/https%3A%2F%2Famircodecollider.pages.dev?w=1280&h=960" width="100%" alt="Live preview" />
 ==========================================
-<div align="center">
-  <img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/banner.png" alt="AmirCodeCollider banner" width="100%" />
-  <br/><br/>
-  <img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/site-light.png" alt="Light theme" width="49%" />
-  <img src="https://raw.githubusercontent.com/AmirCollider/AmirCodeCollider/main/assets/site-dark.png"  alt="Dark theme"  width="49%" />
-</div>
 -->
 
 ---
@@ -207,6 +231,6 @@ TELEGRAM_WEBHOOK_SECRET=...
 
 <div align="center">
 
-**© <!--YEAR--> Amir Collider** · crafting cute webs & indie games 🪐
+**© 2026 Amir Collider** · crafting cute webs & indie games 🪐
 
 </div>
