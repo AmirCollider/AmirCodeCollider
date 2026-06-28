@@ -425,3 +425,25 @@ export async function onRequestPost(context) {
 
   return new Response("ok");
 }
+
+// ==========================================
+// onRequestGet — health probe (open this in a browser)
+// Shows whether the function is deployed and which
+// bindings/variables are wired, without leaking values.
+// ==========================================
+export async function onRequestGet(context) {
+  const { env } = context;
+  const adminId = String(env.TELEGRAM_CHAT_ID || env.AmirCollider || "");
+  const body = {
+    ok: true,
+    service: "telegram-webhook",
+    deployed: true,
+    has_token: !!env.TELEGRAM_BOT_TOKEN,
+    has_kv: !!env.PROJECTS,
+    has_secret: !!env.TELEGRAM_WEBHOOK_SECRET,
+    admin_set: adminId.length > 0,
+  };
+  return new Response(JSON.stringify(body, null, 2), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
