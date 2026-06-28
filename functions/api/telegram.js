@@ -1,12 +1,14 @@
 // ==========================================
 // Telegram Webhook — POST /api/telegram
 // AmirCollider Games — amircodecollider
-// Admin-only management bot. Handles commands and
-// inline-button taps to browse projects, change
-// status, delete, and block/unblock senders.
-// Requires KV binding PROJECTS and env vars:
-//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (or AmirCollider),
-//   TELEGRAM_WEBHOOK_SECRET
+// Admin-only management bot backed by a D1 database.
+// Self-creates its schema, self-registers its slash
+// commands, and handles commands + inline-button taps
+// to browse projects, change status, delete, and
+// block/unblock senders.
+// Bindings: D1 database "DB".
+// Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (or AmirCollider),
+//      TELEGRAM_WEBHOOK_SECRET
 // ==========================================
 
 // ==========================================
@@ -14,6 +16,7 @@
 // ==========================================
 const PAGE = 8;
 const MAX_DETAILS = 3500;
+const CMD_VER = "1"; // bump to force command re-registration
 
 const STATUS = {
   new:    { emoji: "🆕", label: "New" },
@@ -112,13 +115,53 @@ async function sendOrEdit(ctx, chatId, text, kb, ref) {
 }
 
 // ==========================================
-// KV helpers
+// ensureSchema — create tables on first use (idempotent)
 // ==========================================
-async function getIndex(KV) { return (await KV.get("__index", { type: "json" })) || []; }
-async function setIndex(KV, arr) { await KV.put("__index", JSON.stringify(arr)); }
-async function getBlocked(KV) { return (await KV.get("__blocked", { type: "json" })) || []; }
-async function setBlocked(KV, arr) { await KV.put("__blocked", JSON.stringify(arr)); }
-async function getProject(KV, id) { return await KV.get("project:" + id, { type: "json" }); }
+async function ensureSchema(DB) {
+  await DB.batch([
+    DB.prepare("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT, contact_method TEXT, contact_handle TEXT, project_type TEXT, budget TEXT, timeline TEXT, details TEXT, status TEXT DEFAULT 'new', created TEXT, created_h TEXT, origin TEXT, chat_id TEXT, message_id INTEGER)"),
+    DB.prepare("CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status, created DESC)"),
+    DB.prepare("CREATE TABLE IF NOT EXISTS blocked (bid TEXT PRIMARY KEY, method TEXT, handle TEXT, norm TEXT UNIQUE, at TEXT)"),
+    DB.prepare("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"),
+  ]);
+}
+
+// ==========================================
+// setCommands — register the slash-command menu
+// ==========================================
+async function setCommands(token) {
+  await tg(token, "setMyCommands", {
+    commands: [
+      { command: "menu",     description: "Open the project manager" },
+      { command: "projects", description: "New requests" },
+      { command: "active",   description: "In progress" },
+      { command: "done",     description: "Completed" },
+      { command: "blocked",  description: "Blocked senders" },
+    ],
+  });
+}
+
+// ==========================================
+// ensureCommands — register commands once per version
+// ==========================================
+async function ensureCommands(ctx) {
+  try {
+    const row = await ctx.DB.prepare("SELECT value FROM meta WHERE key='cmd_ver'").first();
+    if (!row || row.value !== CMD_VER) {
+      await setCommands(ctx.token);
+      await ctx.DB.prepare(
+        "INSERT INTO meta (key,value) VALUES ('cmd_ver',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+      ).bind(CMD_VER).run();
+    }
+  } catch (_) {}
+}
+
+// ==========================================
+// getProject — one row by id
+// ==========================================
+async function getProject(DB, id) {
+  return await DB.prepare("SELECT * FROM projects WHERE id=?").bind(id).first();
+}
 
 // ==========================================
 // projectText — full project card
@@ -179,24 +222,24 @@ function confirmKb(yes, no) {
 // sendMenu — main management menu (with live counts)
 // ==========================================
 async function sendMenu(ctx, chatId, ref) {
-  const idx = await getIndex(ctx.KV);
-  const blk = await getBlocked(ctx.KV);
-  const c = { new: 0, active: 0, done: 0 };
-  for (const it of idx) if (c[it.status] != null) c[it.status]++;
+  const counts = { new: 0, active: 0, done: 0 };
+  const rs = await ctx.DB.prepare("SELECT status, COUNT(*) AS c FROM projects GROUP BY status").all();
+  for (const r of (rs.results || [])) if (counts[r.status] != null) counts[r.status] = r.c;
+  const blk = (await ctx.DB.prepare("SELECT COUNT(*) AS c FROM blocked").first()).c;
 
   const text = [
     "📂 <b>Project manager</b>",
     "",
-    `🆕 New: <b>${c.new}</b>`,
-    `🚧 In progress: <b>${c.active}</b>`,
-    `✅ Completed: <b>${c.done}</b>`,
-    `🚫 Blocked: <b>${blk.length}</b>`,
+    `🆕 New: <b>${counts.new}</b>`,
+    `🚧 In progress: <b>${counts.active}</b>`,
+    `✅ Completed: <b>${counts.done}</b>`,
+    `🚫 Blocked: <b>${blk}</b>`,
   ].join("\n");
 
   const kb = { inline_keyboard: [
-    [{ text: `🆕 New (${c.new})`, callback_data: "l:new:0" }, { text: `🚧 In progress (${c.active})`, callback_data: "l:active:0" }],
-    [{ text: `✅ Completed (${c.done})`, callback_data: "l:done:0" }],
-    [{ text: `🚫 Blocked (${blk.length})`, callback_data: "m:blocked:0" }],
+    [{ text: `🆕 New (${counts.new})`, callback_data: "l:new:0" }, { text: `🚧 In progress (${counts.active})`, callback_data: "l:active:0" }],
+    [{ text: `✅ Completed (${counts.done})`, callback_data: "l:done:0" }],
+    [{ text: `🚫 Blocked (${blk})`, callback_data: "m:blocked:0" }],
   ] };
   await sendOrEdit(ctx, chatId, text, kb, ref);
 }
@@ -206,14 +249,16 @@ async function sendMenu(ctx, chatId, ref) {
 // ==========================================
 async function sendList(ctx, chatId, status, page, ref) {
   if (!STATUS[status]) status = "new";
-  const idx = await getIndex(ctx.KV);
-  const items = idx.filter((it) => it.status === status);
   const st = STATUS[status];
-  const pages = Math.max(1, Math.ceil(items.length / PAGE));
+  const total = (await ctx.DB.prepare("SELECT COUNT(*) AS c FROM projects WHERE status=?").bind(status).first()).c;
+  const pages = Math.max(1, Math.ceil(total / PAGE));
   page = Math.min(Math.max(0, page || 0), pages - 1);
-  const slice = items.slice(page * PAGE, (page + 1) * PAGE);
 
-  const rows = slice.map((it) => [{
+  const rs = await ctx.DB.prepare(
+    "SELECT id,name,project_type,status FROM projects WHERE status=? ORDER BY created DESC LIMIT ? OFFSET ?"
+  ).bind(status, PAGE, page * PAGE).all();
+
+  const rows = (rs.results || []).map((it) => [{
     text: `${STATUS[it.status].emoji} ${trunc(it.name, 18)} · ${trunc(it.project_type, 16)}`,
     callback_data: `v:${it.id}`,
   }]);
@@ -224,8 +269,8 @@ async function sendList(ctx, chatId, status, page, ref) {
   if (nav.length) rows.push(nav);
   rows.push([{ text: "🏠 Menu", callback_data: "home" }]);
 
-  const text = items.length
-    ? `${st.emoji} <b>${st.label}</b> — ${items.length} total\nPage ${page + 1}/${pages}`
+  const text = total
+    ? `${st.emoji} <b>${st.label}</b> — ${total} total\nPage ${page + 1}/${pages}`
     : `${st.emoji} <b>${st.label}</b>\n\nNothing here yet.`;
   await sendOrEdit(ctx, chatId, text, { inline_keyboard: rows }, ref);
 }
@@ -234,7 +279,7 @@ async function sendList(ctx, chatId, status, page, ref) {
 // sendDetail — one project with its action buttons
 // ==========================================
 async function sendDetail(ctx, chatId, id, ref) {
-  const p = await getProject(ctx.KV, id);
+  const p = await getProject(ctx.DB, id);
   if (!p) {
     await sendOrEdit(ctx, chatId, "⚠️ That project no longer exists.",
       { inline_keyboard: [[{ text: "🏠 Menu", callback_data: "home" }]] }, ref);
@@ -247,12 +292,15 @@ async function sendDetail(ctx, chatId, id, ref) {
 // sendBlocked — paginated blocklist (tap to unblock)
 // ==========================================
 async function sendBlocked(ctx, chatId, page, ref) {
-  const blocked = await getBlocked(ctx.KV);
-  const pages = Math.max(1, Math.ceil(blocked.length / PAGE));
+  const total = (await ctx.DB.prepare("SELECT COUNT(*) AS c FROM blocked").first()).c;
+  const pages = Math.max(1, Math.ceil(total / PAGE));
   page = Math.min(Math.max(0, page || 0), pages - 1);
-  const slice = blocked.slice(page * PAGE, (page + 1) * PAGE);
 
-  const rows = slice.map((b) => [{
+  const rs = await ctx.DB.prepare(
+    "SELECT bid,method,handle FROM blocked ORDER BY at DESC LIMIT ? OFFSET ?"
+  ).bind(PAGE, page * PAGE).all();
+
+  const rows = (rs.results || []).map((b) => [{
     text: `✖ ${trunc(b.method, 10)} · ${trunc(b.handle, 20)}`,
     callback_data: `ub:${b.bid}`,
   }]);
@@ -263,8 +311,8 @@ async function sendBlocked(ctx, chatId, page, ref) {
   if (nav.length) rows.push(nav);
   rows.push([{ text: "🏠 Menu", callback_data: "home" }]);
 
-  const text = blocked.length
-    ? `🚫 <b>Blocked senders</b> — ${blocked.length}\nTap an entry to unblock. Page ${page + 1}/${pages}`
+  const text = total
+    ? `🚫 <b>Blocked senders</b> — ${total}\nTap an entry to unblock. Page ${page + 1}/${pages}`
     : "🚫 <b>Blocked senders</b>\n\nNo one is blocked.";
   await sendOrEdit(ctx, chatId, text, { inline_keyboard: rows }, ref);
 }
@@ -273,25 +321,17 @@ async function sendBlocked(ctx, chatId, page, ref) {
 // setStatus — change a project's status
 // ==========================================
 async function setStatus(ctx, id, status) {
-  const p = await getProject(ctx.KV, id);
-  if (!p || !STATUS[status]) return null;
-  p.status = status;
-  await ctx.KV.put("project:" + id, JSON.stringify(p));
-  const idx = await getIndex(ctx.KV);
-  const e = idx.find((it) => it.id === id);
-  if (e) e.status = status;
-  await setIndex(ctx.KV, idx);
-  return p;
+  if (!STATUS[status]) return null;
+  await ctx.DB.prepare("UPDATE projects SET status=? WHERE id=?").bind(status, id).run();
+  return await getProject(ctx.DB, id);
 }
 
 // ==========================================
-// deleteProject — remove project + its index entry + card
+// deleteProject — remove project row + its posted card
 // ==========================================
 async function deleteProject(ctx, id) {
-  const p = await getProject(ctx.KV, id);
-  await ctx.KV.delete("project:" + id);
-  const idx = (await getIndex(ctx.KV)).filter((it) => it.id !== id);
-  await setIndex(ctx.KV, idx);
+  const p = await getProject(ctx.DB, id);
+  await ctx.DB.prepare("DELETE FROM projects WHERE id=?").bind(id).run();
   if (p && p.chat_id && p.message_id) {
     await tg(ctx.token, "deleteMessage", { chat_id: p.chat_id, message_id: p.message_id });
   }
@@ -303,24 +343,16 @@ async function deleteProject(ctx, id) {
 // ==========================================
 async function blockSender(ctx, p) {
   const norm = normContact(p.contact_method, p.contact_handle);
-  const blocked = await getBlocked(ctx.KV);
-  if (!blocked.some((b) => b.norm === norm)) {
-    blocked.unshift({ bid: shortId(), method: p.contact_method, handle: p.contact_handle, norm, at: new Date().toISOString() });
-    await setBlocked(ctx.KV, blocked);
-    await ctx.KV.put("blocknorm:" + norm, "1");
-  }
+  await ctx.DB.prepare(
+    "INSERT OR IGNORE INTO blocked (bid,method,handle,norm,at) VALUES (?,?,?,?,?)"
+  ).bind(shortId(), p.contact_method, p.contact_handle, norm, new Date().toISOString()).run();
 }
 
 // ==========================================
 // unblock — remove a blocklist entry by bid
 // ==========================================
 async function unblock(ctx, bid) {
-  const blocked = await getBlocked(ctx.KV);
-  const b = blocked.find((x) => x.bid === bid);
-  if (b) {
-    await ctx.KV.delete("blocknorm:" + b.norm);
-    await setBlocked(ctx.KV, blocked.filter((x) => x.bid !== bid));
-  }
+  await ctx.DB.prepare("DELETE FROM blocked WHERE bid=?").bind(bid).run();
 }
 
 // ==========================================
@@ -332,11 +364,18 @@ async function handleMessage(msg, ctx) {
     await tg(ctx.token, "sendMessage", { chat_id: chatId, text: "🔒 This is a private management bot." });
     return;
   }
-  const text = String(msg.text || "").trim().toLowerCase();
-  if (text === "/active") return sendList(ctx, chatId, "active", 0, null);
-  if (text === "/done")   return sendList(ctx, chatId, "done", 0, null);
-  if (text === "/new" || text === "/projects") return sendList(ctx, chatId, "new", 0, null);
-  if (text === "/blocked") return sendBlocked(ctx, chatId, 0, null);
+  const raw = String(msg.text || "").trim();
+  const cmd = raw.split(/\s+/)[0].split("@")[0].toLowerCase();
+
+  if (cmd === "/setup") {
+    await setCommands(ctx.token);
+    await tg(ctx.token, "sendMessage", { chat_id: chatId, text: "✅ Commands registered. Use the ☰ menu or type /projects." });
+    return;
+  }
+  if (cmd === "/active") return sendList(ctx, chatId, "active", 0, null);
+  if (cmd === "/done")   return sendList(ctx, chatId, "done", 0, null);
+  if (cmd === "/new" || cmd === "/projects") return sendList(ctx, chatId, "new", 0, null);
+  if (cmd === "/blocked") return sendBlocked(ctx, chatId, 0, null);
   return sendMenu(ctx, chatId, null);
 }
 
@@ -365,7 +404,7 @@ async function handleCallback(cq, ctx) {
   }
 
   if (op === "delc") {
-    const p = await getProject(ctx.KV, parts[1]);
+    const p = await getProject(ctx.DB, parts[1]);
     const name = p ? esc(p.name) : parts[1];
     await sendOrEdit(ctx, chatId, `🗑 Delete <b>${name}</b>?\nThis cannot be undone.`, confirmKb(`delok:${parts[1]}`, `v:${parts[1]}`), ref);
     return answer(ctx.token, cq.id);
@@ -377,13 +416,13 @@ async function handleCallback(cq, ctx) {
   }
 
   if (op === "blkc") {
-    const p = await getProject(ctx.KV, parts[1]);
+    const p = await getProject(ctx.DB, parts[1]);
     const who = p ? `${esc(p.contact_method)} · ${esc(p.contact_handle)}` : parts[1];
     await sendOrEdit(ctx, chatId, `🚫 Block <b>${who}</b>?\nFuture requests from this contact are dropped silently.`, confirmKb(`blkok:${parts[1]}`, `v:${parts[1]}`), ref);
     return answer(ctx.token, cq.id);
   }
   if (op === "blkok") {
-    const p = await getProject(ctx.KV, parts[1]);
+    const p = await getProject(ctx.DB, parts[1]);
     if (p) await blockSender(ctx, p);
     await sendDetail(ctx, chatId, parts[1], ref);
     return answer(ctx.token, cq.id, "🚫 Blocked");
@@ -406,19 +445,34 @@ export async function onRequestPost(context) {
   const token = env.TELEGRAM_BOT_TOKEN;
   const adminId = String(env.TELEGRAM_CHAT_ID || env.AmirCollider || "");
   const secret = env.TELEGRAM_WEBHOOK_SECRET;
-  const KV = env.PROJECTS;
+  const DB = env.DB;
 
   // Verify Telegram's secret header
   if (secret && request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== secret) {
     return new Response("forbidden", { status: 403 });
   }
-  if (!token || !KV) return new Response("ok");
+  if (!token) return new Response("ok");
 
   let update;
   try { update = await request.json(); } catch (_) { return new Response("ok"); }
 
-  const ctx = { token, adminId, KV };
+  const ctx = { token, adminId, DB };
+
+  // If the database is not bound yet, tell the admin and stop
+  if (!DB) {
+    try {
+      const m = update.message || (update.callback_query && update.callback_query.message);
+      const cid = m && m.chat ? String(m.chat.id) : adminId;
+      if (cid === adminId) {
+        await tg(token, "sendMessage", { chat_id: cid, text: "⚠️ Database not connected. Bind a D1 database as <b>DB</b> in Pages → Settings → Bindings, then redeploy.", parse_mode: "HTML" });
+      }
+    } catch (_) {}
+    return new Response("ok");
+  }
+
   try {
+    await ensureSchema(DB);
+    await ensureCommands(ctx);
     if (update.callback_query) await handleCallback(update.callback_query, ctx);
     else if (update.message)   await handleMessage(update.message, ctx);
   } catch (_) {}
@@ -428,8 +482,6 @@ export async function onRequestPost(context) {
 
 // ==========================================
 // onRequestGet — health probe (open this in a browser)
-// Shows whether the function is deployed and which
-// bindings/variables are wired, without leaking values.
 // ==========================================
 export async function onRequestGet(context) {
   const { env } = context;
@@ -439,7 +491,7 @@ export async function onRequestGet(context) {
     service: "telegram-webhook",
     deployed: true,
     has_token: !!env.TELEGRAM_BOT_TOKEN,
-    has_kv: !!env.PROJECTS,
+    has_db: !!env.DB,
     has_secret: !!env.TELEGRAM_WEBHOOK_SECRET,
     admin_set: adminId.length > 0,
   };
