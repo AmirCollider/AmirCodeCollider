@@ -5,7 +5,7 @@
 // inline-button taps to browse projects, change
 // status, delete, and block/unblock senders.
 // Requires KV binding PROJECTS and env vars:
-//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (or AmirCollider),
+//   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (or AmirCollider), 
 //   TELEGRAM_WEBHOOK_SECRET
 // ==========================================
 
